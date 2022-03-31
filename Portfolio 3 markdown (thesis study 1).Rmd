@@ -1,0 +1,204 @@
+---
+title: "Portfolio 4 MAP test- Thesis study 1"
+author: "Adam Paul"
+date: "3/24/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+> The purpose of this portfolio is to practice with data I already have and prepare for writing a path analysis, so that when I get my data I can run the analyses right away. With that in mind, this markdown has details and information for my own learning, so I can refer to it as I am writing the final version. Which, for some reason, is an earlier portfolio project. Go past me.
+
+## Set-up
+
+The main packages I need are lavaan and lmertest, but semPlot is used to create a visual model.
+
+> Getting semPlot to work was a genuine ordeal, but it should all work now.
+
+
+library('psych')
+library('reshape2')
+library('plyr')
+library('lavaan')
+library('Rcpp')
+library('lme4')
+library('lmerTest')
+library('OpenMx')
+library('semPlot')
+rm(list=ls())
+
+##### Bringing in the data
+
+
+>Will pull the data tomorrow to practice this
+
+```{r bringing in data}
+
+View(Classroom_Experiences)
+```
+
+##### Data cleaning!
+
+## Data cleaning
+
+Will need to create composite variable for prompted disclosure out of two items.
+
+> Old data only had one question, so that is not done below. Will add this after finishing the path analysis code
+
+### Descriptives cleaning
+
+##### Race dummy coding
+
+##### Gender dummy coding
+
+### Variables of Interest
+
+##### Institutional belonging (belong_instit_comp4)
+
+
+##### Class belonging (belong_class_comp4)
+
+
+##### Class disclosure (cdiscl_disclose_comp3)
+
+
+##### Class prompted disclosure (cdiscl__prompt_comp2)
+
+
+#### Group disclosure (gdiscl_disclose_comp3)
+
+
+##### Group prompted disclosure (gdiscl_prompt_comp2)
+
+
+
+If I decide it's necessary, I will rename variables to make the models easy to think about here.
+
+------------------
+
+# MEDIATION MODELS
+
+------------------
+
+> This section is information given to me by Shannon, kept here and in other path analysis portfolios so I have access to them.
+
+Reminder: Rules of thumb to evaluate goodness of fit: CFI/TLI > 0.95, RMSEA < 0.05, SRMR < 0.06  (Reference: Hu & Bentler, 1999)
+
+### References: 
+> http://davidakenny.net/cm/fit.htm
+ https://www.psychologie.uzh.ch/dam/jcr:ffffffff-b371-2797-0000-00000fda8f29/chisquare_diff_en.pdf
+ Chi-Square Distribution Table: http://sites.stat.psu.edu/~mga/401/tables/Chi-square-table.pdf
+ http://www.structuralequations.com/resources/Basic_lavaan_Syntax_Guide_Aug1_2013.pdf
+
+------------------
+
+# Current settings 
+
+------------------
+
+### Resampling 
+ Right now, bootstraps are set at 1000 resamples. This to make running the script not take impossibly long
+ When running final models, 10000 resamples would probably be preferred - but it'll take a while. 
+
+### Type of CIs
+ lavaan can handle four types of bootstrapped CIs; add "boot.ci.type = " to parameterEstimates
+ options for types are "norm", "basic", "perc" (percentile), and "bca.simple" 
+ defualt is "perc" (I think )
+
+### Significance Levels
+ alpha level for bootstrapping can be adjusted; add "level = " to parameterEstimates 
+ options for levels are e.g., "95", "99"
+
+------------------
+
+## Model time!
+
+------------------
+
+##### Hypotheses
+
+H1: Students who disclose in a class or small group will report higher feelings of belonging in the class and at their institution.
+
+H2: Prompting disclosure in class or in small groups will be associated with greater disclosure and greater sense of belonging at the classroom and institutional level, as well as whether the relationship between disclosure and institutional belonging is mediated by classroom belonging.
+
+>These are the covariates I am including in the model:
+Gender, with female as the reference class: 
+        gender_identity_dich 
+Race, with white as the reference class: 
+        race_asian race_black race_hispanic race_multiracial 
+Classmates and group members known prior:
+        classmates_know groupdesc_know_prior
+
+#### Creating the model!
+
+```{r Model creation}
+
+```
+
+```{r old model creation}
+model_1 <-   '  #Class Belonging direct effects
+                belong_class_comp4 ~ a*cdiscl_disclose + gender_identity_dich + race_asian 
+                + race_black + race_hispanic + race_multiracial + classmates_know +                          groupdesc_know_prior
+                
+                belong_class_comp4 ~ b*gdiscl_disclose
+                
+                #WFU Belonging direct effects
+                belong_wfu_comp4 ~ c*cdiscl_disclose + gender_identity_dich + race_asian 
+                + race_black + race_hispanic + race_multiracial + classmates_know +                          groupdesc_know_prior
+                
+                belong_wfu_comp4 ~ d*gdiscl_disclose
+                
+                #Mediator for class disclosure
+                cdiscl_disclose ~ e*cdiscl_prompt_discl
+                belong_class_comp4 ~ cdiscl_prompt_discl
+                belong_wfu_comp4 ~ cdiscl_prompt_discl
+                
+                #Mediator for group disclosure
+                gdiscl_disclose ~ f*gdiscl_do_emot
+                belong_class_comp4 ~ gdiscl_do_emot
+                belong_wfu_comp4 ~ gdiscl_do_emot
+                
+                #removing correlation between prompted disclosures
+                cdiscl_prompt_discl ~~ 0*gdiscl_do_emot 
+                '
+```
+
+#### Testing the fit
+
+
+```{r testing fit}
+fit <- sem(model_1, data=Classroom_Experiences)
+
+summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
+
+#### Graphing!
+
+> Will need to import graph from whichever markdown gets it right. 
+
+```{r Path visualization}
+semPaths(fit, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+```
+
+#### Bootstrapping
+
+#####for boot strapped 95% CIs
+
+```{r bootstrapped code}
+fit <- sem(model_1, data=Classroom_Experiences, se="bootstrap", bootstrap = 10000)
+summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
+
+# What does the data mean?
+
+>This section will be used for me to write up what I've learned from the data analysis, as a point to reference the findings while I'm working later.
+
+>H1: Students who disclose in a class or small group will report higher feelings of belonging in the class and at their institution.
+
+XXXXXXXXXXXXXXXXXXXXXXXX
+
+>H2: Prompting disclosure in class or in small groups will be associated with greater disclosure and greater sense of belonging at the classroom and institutional level, as well as whether the relationship between disclosure and institutional belonging is mediated by classroom belonging.
+
+XXXXXXXXXXXXXXXXXXXXXXXX
