@@ -131,6 +131,8 @@ study1 %>%
         arrange(V5)
 ```
 
+cleaning one
+
 ```{r}
 test1 <- study1 %>%
         mutate(demog_gender_nonbin = case_when(is.na(demog_gender_female) & is.na(demog_gender_male) ~ 1 ))
@@ -146,11 +148,12 @@ test1 %>%
 
 WHY IS THIS SO FUCKING HARD??????
 
+& is.na(demog_gender_female) | is.na(demog_gender_male) 
+
 ```{r}
 test1 <- study1 %>%
-        mutate(demog_gender_nonbin = case_when(demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1 & is.na(demog_gender_female) & is.na(demog_gender_male) ~ 1 ))
-
-
+        mutate(demog_gender_nonbin = case_when((demog_gender_female != 1 | is.na(demog_gender_female) & (demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1)) |
+        (demog_gender_male != 1 & (demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1) ~ 1 )))
 
 test1 %>%
         select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_genderqueer, demog_gender_trans) %>%
@@ -160,21 +163,18 @@ test1 %>%
 
 ```
 
-```{r}
-study1 %>%
-        mutate(demog_gender_nonbin = ifelse(!is.na(demog_gender_female), 0, 1 & demog_gender_trans == 1)) %>%
-                       select(demog_gender_nonbin, demog_gender_female, demog_gender_trans) %>%
-        arrange(desc(demog_gender_trans))
-```
+
 
 ```{r}
-study1 %>%
-        mutate(demog_gender_nonbin = ifelse(!is.na(demog_gender_female) & !is.na(demog_gender_male), 0, 1)) %>%
-                       select(demog_gender_nonbin, demog_gender_female, demog_gender_trans) %>%
-        arrange(desc(demog_gender_trans))
+test1 <- study1 %>%
+        mutate(demog_gender_nonbin = case_when(demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1 ~ 1,  !is.na(demog_gender_male) ~ 0  ))
+
+
+
+test1 %>%
+        select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_genderqueer, demog_gender_trans) %>%
+        arrange(desc(demog_gender_genderqueer))
 ```
-
-
 
 
 select(demog_gender_dich, demog_gender_male, demog_gender_female)
