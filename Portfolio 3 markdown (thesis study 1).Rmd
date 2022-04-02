@@ -9,13 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-> The purpose of this portfolio is to practice with data I already have and prepare for writing a path analysis, so that when I get my data I can run the analyses right away. With that in mind, this markdown has details and information for my own learning, so I can refer to it as I am writing the final version. Which, for some reason, is an earlier portfolio project. Go past me.
+> The purpose of this portfolio is to run the analyses for study 1 of my thesis. It is based on the analyses set up in Portfolio 4 (yes, the numbering is odd to me too).
 
 ## Set-up
 
-The main packages I need are lavaan and lmertest, but semPlot is used to create a visual model.
-
-> Getting semPlot to work was a genuine ordeal, but it should all work now.
+The main packages I need are lavaan and lmertest, but semPlot is used to create a visual model. The rest of the libraries are to ensure I have the other programs I may need.
 
 
 library('psych')
@@ -32,11 +30,10 @@ rm(list=ls())
 
 ##### Bringing in the data
 
-
->Will pull the data tomorrow to practice this
+Data downloaded from Qualtrics as a .csv
 
 ```{r bringing in data}
-study1 <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (raw data).csv", row.names=NULL, stringsAsFactors=TRUE)
+study1 <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (Excel cleaned).csv", row.names=NULL, stringsAsFactors=TRUE)
 View(study1)
 ```
 
@@ -50,7 +47,7 @@ Will need to create composite variable for prompted disclosure out of two items.
 
 ##### Basic data cleaning
 
-Changing the name of the variable for time spent on the survey.
+Changing the name of the variable for time spent on the survey. Several variable names were changed in excel. Specifically, the names of the gender responses were changed from a number to their actual gender identity (e.g., demog_gender_1 became demog_gender_female)
 
 names(study1)[6] <- 'duration_seconds'
 
@@ -84,16 +81,111 @@ filter(study1, school_belong > 4, school_outsider > 4, class_belong > 4, class_o
 
 ```
 
+Removing identifying information from the dataset.
 
 ```{r}
+study1 <- subset(study1, select= -c(StartDate, EndDate, Status,	IPAddress, Progress,
+                Finished, RecordedDate, ResponseId, RecipientLastName, RecipientFirstName,
+                RecipientEmail, ExternalReference, LocationLatitude, LocationLongitude,
+                DistributionChannel, UserLanguage))
+
+```
+
+
+### Descriptives cleaning
+
+##### Gender dummy coding
+
+The names of the gender variables have been changed, but I do need to look at them more closely to dummy-code them.
+
+```{r checking gender demographics}
+study1 %>%
+        filter(is.na(demog_gender_female), is.na(demog_gender_male)) %>%
+        count(demog_gender_trans, demog_gender_twospirit, demog_gender_genderqueer, demog_gender_other, demog_gender_no_answer)
+
+study1 %>%
+count(demog_gender_trans, demog_gender_twospirit, demog_gender_genderqueer, demog_gender_other, demog_gender_no_answer)
+
+```
+
+We have 12 people that did not identify as either male or female in some way. Due to this small number, there is not much we can do with these individual's gender, so I am going to make two variables, gender_male & gender_nonbinary.
+
+
+
+```{r making gender dummy code}
+study1 %>%
+        mutate(demog_gender_nonbin = 
+                       case_when(demog_gender_trans == 1 & demog_gender_female == NA & demog_gender_male == NA ~ 1, 
+                                 demog_gender_female == 1 ~ 0,
+                                 demog_gender_male ==1 ~ 0,
+                                 )) %>%
+        select(demog_gender_nonbin, demog_gender_trans)
+```
+
+```{r}
+study1 %>%
+        mutate(V5 = case_when(demog_gender_female == 1 | demog_gender_male == 1 ~ 0
+                              
+                              )) %>%
+        select(V5, demog_gender_female) %>%
+        arrange(V5)
+```
+
+```{r}
+test1 <- study1 %>%
+        mutate(demog_gender_nonbin = case_when(is.na(demog_gender_female) & is.na(demog_gender_male) ~ 1 ))
+
+
+
+test1 %>%
+        select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_trans) %>%
+        arrange(desc(demog_gender_trans))
+
+```
+
+
+WHY IS THIS SO FUCKING HARD??????
+
+```{r}
+test1 <- study1 %>%
+        mutate(demog_gender_nonbin = case_when(demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1 & is.na(demog_gender_female) & is.na(demog_gender_male) ~ 1 ))
+
+
+
+test1 %>%
+        select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_genderqueer, demog_gender_trans) %>%
+        arrange(desc(demog_gender_genderqueer))
+
 
 
 ```
-### Descriptives cleaning
+
+```{r}
+study1 %>%
+        mutate(demog_gender_nonbin = ifelse(!is.na(demog_gender_female), 0, 1 & demog_gender_trans == 1)) %>%
+                       select(demog_gender_nonbin, demog_gender_female, demog_gender_trans) %>%
+        arrange(desc(demog_gender_trans))
+```
+
+```{r}
+study1 %>%
+        mutate(demog_gender_nonbin = ifelse(!is.na(demog_gender_female) & !is.na(demog_gender_male), 0, 1)) %>%
+                       select(demog_gender_nonbin, demog_gender_female, demog_gender_trans) %>%
+        arrange(desc(demog_gender_trans))
+```
+
+
+
+
+select(demog_gender_dich, demog_gender_male, demog_gender_female)
+
+
+study1 <- study1 %>%
+        mutate(demog_gender_dich = demog_gender_female == 1) 
 
 ##### Race dummy coding
 
-##### Gender dummy coding
+
 
 ### Variables of Interest
 
