@@ -92,123 +92,14 @@ study1 <- subset(study1, select= -c(StartDate, EndDate, Status,	IPAddress, Progr
 ```
 
 
-### Descriptives cleaning
+Variable cleaning was done using SPSS, which is less idea than I'd prefer. As such, the data will be returned from SPSS. Full version will have data cleaning done in R.
 
-##### Gender dummy coding
-
-The names of the gender variables have been changed, but I do need to look at them more closely to dummy-code them.
-
-```{r checking gender demographics}
-study1 %>%
-        filter(is.na(demog_gender_female), is.na(demog_gender_male)) %>%
-        count(demog_gender_trans, demog_gender_twospirit, demog_gender_genderqueer, demog_gender_other, demog_gender_no_answer)
-
-study1 %>%
-count(demog_gender_trans, demog_gender_twospirit, demog_gender_genderqueer, demog_gender_other, demog_gender_no_answer)
-
+```{r temporary data returning}
+`study1` <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (SPSS cleaned).csv")
+View(study1)
 ```
 
-We have 12 people that did not identify as either male or female in some way. Due to this small number, there is not much we can do with these individual's gender, so I am going to make two variables, gender_male & gender_nonbinary.
-
-
-
-```{r making gender dummy code}
-study1 %>%
-        mutate(demog_gender_nonbin = 
-                       case_when(demog_gender_trans == 1 & demog_gender_female == NA & demog_gender_male == NA ~ 1, 
-                                 demog_gender_female == 1 ~ 0,
-                                 demog_gender_male ==1 ~ 0,
-                                 )) %>%
-        select(demog_gender_nonbin, demog_gender_trans)
-```
-
-```{r}
-study1 %>%
-        mutate(V5 = case_when(demog_gender_female == 1 | demog_gender_male == 1 ~ 0
-                              
-                              )) %>%
-        select(V5, demog_gender_female) %>%
-        arrange(V5)
-```
-
-cleaning one
-
-```{r}
-test1 <- study1 %>%
-        mutate(demog_gender_nonbin = case_when(is.na(demog_gender_female) & is.na(demog_gender_male) ~ 1 ))
-
-
-
-test1 %>%
-        select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_trans) %>%
-        arrange(desc(demog_gender_trans))
-
-```
-
-
-WHY IS THIS SO FUCKING HARD??????
-
-& is.na(demog_gender_female) | is.na(demog_gender_male) 
-
-```{r}
-test1 <- study1 %>%
-        mutate(demog_gender_nonbin = case_when((demog_gender_female != 1 | is.na(demog_gender_female) & (demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1)) |
-        (demog_gender_male != 1 & (demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1) ~ 1 )))
-
-test1 %>%
-        select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_genderqueer, demog_gender_trans) %>%
-        arrange(desc(demog_gender_genderqueer))
-
-
-
-```
-
-
-
-```{r}
-test1 <- study1 %>%
-        mutate(demog_gender_nonbin = case_when(demog_gender_trans == 1 | demog_gender_twospirit == 1 | demog_gender_genderqueer == 1 | demog_gender_other == 1 | demog_gender_no_answer == 1 ~ 1,  !is.na(demog_gender_male) ~ 0  ))
-
-
-
-test1 %>%
-        select(demog_gender_nonbin, demog_gender_female, demog_gender_male, demog_gender_genderqueer, demog_gender_trans) %>%
-        arrange(desc(demog_gender_genderqueer))
-```
-
-
-select(demog_gender_dich, demog_gender_male, demog_gender_female)
-
-
-study1 <- study1 %>%
-        mutate(demog_gender_dich = demog_gender_female == 1) 
-
-##### Race dummy coding
-
-
-
-### Variables of Interest
-
-##### Institutional belonging (belong_instit_comp4)
-
-
-##### Class belonging (belong_class_comp4)
-
-
-##### Class disclosure (cdiscl_disclose_comp3)
-
-
-##### Class prompted disclosure (cdiscl__prompt_comp2)
-
-
-#### Group disclosure (gdiscl_disclose_comp3)
-
-
-##### Group prompted disclosure (gdiscl_prompt_comp2)
-
-
-
-If I decide it's necessary, I will rename variables to make the models easy to think about here.
+as_tibble(study1)
 
 ------------------
 
@@ -267,35 +158,33 @@ Classmates and group members known prior:
 
 #### Creating the model!
 
-```{r Model creation}
-
-```
-
-```{r old model creation}
+```{r model creation}
 model_1 <-   '  #Class Belonging direct effects
-                belong_class_comp4 ~ a*cdiscl_disclose + gender_identity_dich + race_asian 
-                + race_black + race_hispanic + race_multiracial + classmates_know +                          groupdesc_know_prior
+                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary + gender_male_dummy +
+                race_asian + race_black + race_hispanic + race_multiracial + class_know_prior +
+                know_prior_group
                 
-                belong_class_comp4 ~ b*gdiscl_disclose
+                class_belong_comp4 ~ b*group_disclose_comp2
                 
-                #WFU Belonging direct effects
-                belong_wfu_comp4 ~ c*cdiscl_disclose + gender_identity_dich + race_asian 
-                + race_black + race_hispanic + race_multiracial + classmates_know +                          groupdesc_know_prior
+                #School Belonging direct effects
+                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary + gender_male_dummy +
+                race_asian + race_black + race_hispanic + race_multiracial + class_know_prior +
+                know_prior_group
                 
-                belong_wfu_comp4 ~ d*gdiscl_disclose
+                school_belong_comp4 ~ d*group_disclose_comp2
                 
                 #Mediator for class disclosure
-                cdiscl_disclose ~ e*cdiscl_prompt_discl
-                belong_class_comp4 ~ cdiscl_prompt_discl
-                belong_wfu_comp4 ~ cdiscl_prompt_discl
+                class_disclose_comp2 ~ e*cdiscl_prompt_comp2
+                class_belong_comp4 ~ cdiscl_prompt_comp2
+                school_belong_comp4 ~ cdiscl_prompt_comp2
                 
                 #Mediator for group disclosure
-                gdiscl_disclose ~ f*gdiscl_do_emot
-                belong_class_comp4 ~ gdiscl_do_emot
-                belong_wfu_comp4 ~ gdiscl_do_emot
+                group_disclose_comp2 ~ f*gdiscl_prompt_comp2
+                class_belong_comp4 ~ gdiscl_prompt_comp2
+                school_belong_comp4 ~ gdiscl_prompt_comp2
                 
                 #removing correlation between prompted disclosures
-                cdiscl_prompt_discl ~~ 0*gdiscl_do_emot 
+                cdiscl_prompt_comp2 ~~ 0*gdiscl_prompt_comp2
                 '
 ```
 
@@ -303,7 +192,7 @@ model_1 <-   '  #Class Belonging direct effects
 
 
 ```{r testing fit}
-fit <- sem(model_1, data=Classroom_Experiences)
+fit <- sem(model_1, data=study1)
 
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 ```
