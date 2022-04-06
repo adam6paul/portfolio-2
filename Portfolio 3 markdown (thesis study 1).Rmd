@@ -5,11 +5,9 @@ date: "3/24/2022"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+> The purpose of this portfolio is to run the analyses for study 1 of my thesis. It is based on the analyses set up in Portfolio 4 (yes, the numbering is odd too me two).
 
-> The purpose of this portfolio is to run the analyses for study 1 of my thesis. It is based on the analyses set up in Portfolio 4 (yes, the numbering is odd to me too).
+Yes, that was a joke.
 
 ## Set-up
 
@@ -46,8 +44,6 @@ Variable cleaning was done using SPSS, which is not what I wanted to do. As such
 View(study1)
 ```
 
-
-
 Ensuring the dataframe is a tibble (be proud, Mason)
 
 as_tibble(study1)
@@ -81,6 +77,8 @@ filter(study1, school_belong > 4, school_outsider > 4, class_belong > 4, class_o
 
 ```
 
+## Data cleaning
+
 Removing identifying information from the dataset.
 
 ```{r}
@@ -91,18 +89,15 @@ study1 <- subset(study1, select= -c(StartDate, EndDate, Status,	IPAddress, Progr
 
 ```
 
-## Data cleaning
-
-Will need to create composite variable for prompted disclosure out of two items.
 
 ##### Basic data cleaning
 
-Several variable names were changed in excel. Specifically, the names of the gender responses were changed from a number to their actual gender identity (e.g., demog_gender_1 became demog_gender_female)
+Several variable names were changed in excel. Specifically, the names of the gender responses were changed from a number to their actual gender identity (e.g., demog_gender_1 became demog_gender_female). Will make a full-list when I re-do the data cleaning in R.
 
 
 ------------------
 
-# MEDIATION MODELS
+# MEDIATION MODEL DETAILS
 
 ------------------
 
@@ -137,7 +132,7 @@ Reminder: Rules of thumb to evaluate goodness of fit: CFI/TLI > 0.95, RMSEA < 0.
 
 ------------------
 
-## Model time!
+## Analyses!
 
 ------------------
 
@@ -147,6 +142,27 @@ H1: Students who disclose in a class or small group will report higher feelings 
 
 H2: Prompting disclosure in class or in small groups will be associated with greater disclosure and greater sense of belonging at the classroom and institutional level, as well as whether the relationship between disclosure and institutional belonging is mediated by classroom belonging.
 
+All of this can be answered with a single path analysis, but before getting there I need to do some basic examinations of the data.
+
+
+Looking at the basic information for class disclosure.
+
+```{r}
+summary(study1$class_belong_comp4)
+summary(study1$school_belong_comp4)
+summary(study1$cdiscl_prompt_comp2)
+summary(study1$class_disclose_comp2)
+summary(study1$group_disclose_comp2)
+summary(study1$gdiscl_prompt_comp2)
+
+```
+
+
+
+#### Creating the model!
+
+Now that we have an understanding of the data, it's time to move on to the model.
+
 >These are the covariates I am including in the model:
 Gender, with female as the reference class: 
         gender_identity_dich 
@@ -155,17 +171,6 @@ Race, with white as the reference class:
 Classmates and group members known prior:
         classmates_know groupdesc_know_prior
 
-Looking at the basic information for class disclosure.
-
-```{r}
-summary(study1$class_belong_comp4, study1$school_belong_comp4)
-
-hist(study1$class_disclose_comp2)
-```
-
-
-
-#### Creating the model!
 
 ##### Model 1
 ```{r model creation}
@@ -206,7 +211,7 @@ summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 > Key variables and significant variables
 class belonging
      class disclosure 	est.   .189	p=.126
-     group disclosure	est.   .065	p=.649
+     Group disclosure	est.   .065	p=.649
      nonbinary 		est. -1.069	p=.058
      asian		est. -1.037	p=.004
      class_know_prior	est.   .479	p=.001
@@ -219,8 +224,10 @@ school belonging
      class know prior	est.   .297	p=.014
      group_know_prior	est.  -.122	p=.261
 
+
 We replicated our finding that Asian student status is a negative predictor of belonging. While marginal for class belonging, non binary is also a negative predictor.
-As expected, class members known prior is a predictor of belonging and group members known is marginal.
+
+class members known prior is a predictor of belonging and group members known is marginal.
 
 I'd like to briefly look at whether international student status is a predictor. 
 >For some reason, this code is wrong?
@@ -259,27 +266,21 @@ summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 ```
 
 
-Class disclosure is not predicting class belonging or school belonging, which is odd. So I want to find out why.
+> Class disclosure is not predicting class belonging or school belonging, which is odd. So I want to find out why.
 
+##### Possibility 1!
 
-This may be because people are mostly at a 1 in disclosure., so we want to look at folk with disclosure.
+This may be because people are mostly at a 1 in disclosure.
 
+```{r looking at disclosure}
+#Just looking at the distribution of disclosure
+hist(study1$class_disclose_comp2)
 
-```{r}
-study1 %>%
-        group_by(group_use) %>%
-        summarize(freq=n())
-#Most people are saying they don't use groups at all
-
-#Graphing thie relationship between class disclosure and class belonging.
+#Graphing the relationship between class disclosure and class belonging.
 plot(study1$class_disclose_comp2, study1$class_belong_comp4)
 ```
 
-The graph makes it clear that there's pretty wide variance for the people with no class disclosure that may be stifling the variance from appearing in the model.
-
-```{r}
-basic_correlations <- gather(study1, class_belong_comp4)
-```
+As expected, a large portion of our participants are not reporting any disclosure. Looking at some responses on an open-ended comment, several students indicated they were in wholly asynchronous classes. We should have expected this and controlled for it, but we can look at exploratory analyses for why now.
 
 
 ```{r running with only people who have some disclosure}
@@ -293,30 +294,34 @@ fit <- sem(model_1, data=study1a)
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
+While we lost a LOT of participants (n=83), we do see that when we remove people whom have no disclosure there is a relationship between class disclosure and school belonging. The relationship between class belonging for both variables remains non-significant.
 
+  >class Belonging                                                        
+     Class disclosure   Est= -0.059     SE=0.143        p=0.681
+     Group disclosure   Est=0.100       SE=0.121        p=0.410
+   School Belonging
+     Class disclosure   Est=-0.380      SE=0.123        p=0.002
+     Group disclosure   Est=0.272       SE=0.104        p=0.009
 
+##### Possibility 2!
 
-#### Graphing!
+Looking at the results from model_1, we're also losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I look at that below.
 
-> Will need to import graph from whichever markdown gets it right. 
-
-```{r Path visualization}
-semPaths(fit, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+```{r}
+study1 %>%
+        group_by(group_use) %>%
+        summarize(freq=n())
+#Most people are saying they don't use groups at all (123 with no usage).
 ```
 
-#### Bootstrapping
+The graph makes it clear that there's pretty wide variance for the people with no class disclosure. That may be stifling the variance among people who do disclose from appearing in the model.
 
-#####for boot strapped 95% CIs
-
-```{r bootstrapped code}
-fit <- sem(model_1, data=Classroom_Experiences, se="bootstrap", bootstrap = 10000)
-summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-```
+So now, we want to look at what's happening without group disclosure.
 
 
 ##### Model 2
 
-While the above model is good, it is washing out a lot of data from the class disclosure, as we only got responses for group disclosure from students who did meet in groups. As such, we're interested in the full class disclosure data set.
+While model_1 is good, it is washing out a lot of data from the class disclosure as we only got responses for group disclosure from students who did meet in groups. As such, we're interested in examining the full class disclosure data set.
 
 ```{r no group disclosure model}
 model_2 <-   '  #Class Belonging direct effects
@@ -348,7 +353,26 @@ Class disclosure is predictive of class belonging, but not of institutional belo
   school belonging                                                      
     class disclosure       0.114    0.085    1.334    0.182
     
-This means that class disclosure is getting washed out by the removal of the additional variables, or that it is being accounted for by group disclosure. Something worth looking at is whether     
+With the larger sample we're able to see the pattern that we expected. 
+
+
+#### Graphing!
+
+It's important to get a visual understanding of what the data is telling us, even if the model is pretty ugly right now. I will work with Mason to get a pretty visualization.
+
+```{r Path visualization}
+semPaths(fit, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+```
+
+#### Bootstrapping
+
+#####for boot strapped 95% CIs
+
+```{r bootstrapped code}
+fit <- sem(model_1, data=Classroom_Experiences, se="bootstrap", bootstrap = 10000)
+summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
+
 
 # What does the data mean?
 
