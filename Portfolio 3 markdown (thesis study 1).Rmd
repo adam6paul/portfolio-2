@@ -230,16 +230,18 @@ We replicated our finding that Asian student status is a negative predictor of b
 class members known prior is a predictor of belonging and group members known is marginal.
 
 I'd like to briefly look at whether international student status is a predictor. 
->For some reason, this code is wrong?
+#For some reason, this code is wrong?
 
 ```{r model 1a}
 model_1a <-   '  #Class Belonging direct effects
-                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group + demog_international
+                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                
+                race_multiracial + class_know_prior + know_prior_group + demog_international
                 
                 class_belong_comp4 ~ b*group_disclose_comp2
                 
                 #School Belonging direct effects
-                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group + demog_international
+                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                
+                race_multiracial + class_know_prior + know_prior_group + demog_international
                 
                 school_belong_comp4 ~ d*group_disclose_comp2
                 
@@ -268,19 +270,52 @@ summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 > Class disclosure is not predicting class belonging or school belonging, which is odd. So I want to find out why.
 
-##### Possibility 1!
+
+
+
+
+##### Possibility 1! Low Disclosure
 
 This may be because people are mostly at a 1 in disclosure.
 
 ```{r looking at disclosure}
+#Looking at the numbers
+study1 %>%
+        group_by(class_disclose_comp2) %>%
+        summarize(freq=n())
+#111 at 1, 32 at 1.5, and 88 at 2; or 77% of the sample. 
+
 #Just looking at the distribution of disclosure
 hist(study1$class_disclose_comp2)
 
 #Graphing the relationship between class disclosure and class belonging.
 plot(study1$class_disclose_comp2, study1$class_belong_comp4)
+
+study1 %>%
+        group_by(class_disclose_comp2) %>%
+        summarize(mean(class_belong_comp4))
 ```
 
-As expected, a large portion of our participants are not reporting any disclosure. Looking at some responses on an open-ended comment, several students indicated they were in wholly asynchronous classes. We should have expected this and controlled for it, but we can look at exploratory analyses for why now.
+In our sample, 231 participants have disclosure lower than 2 on our composite variable. Additionally, looking at the graph shows that there is pretty substantial variance within the lowest level of disclosure.
+
+
+```{r looking closer at the disclosure levels}
+study1 %>%
+        group_by(cdiscl_private) %>%
+        summarize(freq=n())
+#132 are at 1 (Never), and 118 are at 2 (Rarely); or 83% of our sample
+
+study1 %>%
+        group_by(cdiscl_self_talk) %>%
+        summarize(freq=n())
+#127 at 1, 108 at 2; 78% of our sample
+```
+
+As expected, a large portion of our participants are not reporting any disclosure. Looking at some responses on an open-ended comment, several students indicated they were in wholly asynchronous classes. We should have expected this and controlled for it, but we can look at exploratory analyses with this in mind now.
+
+We suspect that asynchronous classes have disrupted our data.
+
+And so, we will run the model again, but this time dropping anyone who has no disclosure at all. While this does eliminate a key segment of data, it will allow us to look at only classes that are not wholly asynchronous.
 
 
 ```{r running with only people who have some disclosure}
@@ -294,7 +329,8 @@ fit <- sem(model_1, data=study1a)
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
-While we lost a LOT of participants (n=83), we do see that when we remove people whom have no disclosure there is a relationship between class disclosure and school belonging. The relationship between class belonging for both variables remains non-significant.
+
+While we lost a LOT of participants, leaving us with a sample of only n=83, we do see that when we remove people whom have no disclosure there is a relationship between class disclosure and school belonging. The relationship between class belonging for both variables remains non-significant.
 
   >class Belonging                                                        
      Class disclosure   Est= -0.059     SE=0.143        p=0.681
@@ -303,9 +339,12 @@ While we lost a LOT of participants (n=83), we do see that when we remove people
      Class disclosure   Est=-0.380      SE=0.123        p=0.002
      Group disclosure   Est=0.272       SE=0.104        p=0.009
 
-##### Possibility 2!
 
-Looking at the results from model_1, we're also losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I look at that below.
+
+
+##### Possibility 2! Lost data
+
+Looking at the results from model_1, we're also losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I examine this possibility below.
 
 ```{r}
 study1 %>%
