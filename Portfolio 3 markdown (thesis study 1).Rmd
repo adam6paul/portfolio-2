@@ -1,5 +1,5 @@
 ---
-title: "Portfolio 4 MAP test- Thesis study 1"
+title: "Portfolio 4 - Thesis study 1"
 author: "Adam Paul"
 date: "3/24/2022"
 output: html_document
@@ -24,6 +24,7 @@ library('lmerTest')
 library('OpenMx')
 library('semPlot')
 library('tidyverse')
+library('Hmisc')
 rm(list=ls())
 
 ##### Bringing in the data
@@ -157,7 +158,20 @@ summary(study1$gdiscl_prompt_comp2)
 
 ```
 
+It's noteworthy that there is a large number of the sample that do not have responses for group disclosure.
 
+I'd like to look at the basic bivariate correlations for the VOI.
+
+This only works with Hmisc on, but that contradicts my later use of summarize. 
+# What's the better way of doing this?
+
+```{r bivariate correlations}
+correlations <- study1 %>%
+        select(class_belong_comp4, school_belong_comp4, class_disclose_comp2, group_disclose_comp2, class_disclose_comp2, group_disclose_comp2)
+
+rcorr(as.matrix(correlations))
+    
+```
 
 #### Creating the model!
 
@@ -199,10 +213,35 @@ model_1 <-   '  #Class Belonging direct effects
                 '
 ```
 
+```{r model creation}
+model_1b <-   '  #Class Belonging direct effects
+                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
+                
+                class_belong_comp4 ~ b*group_disclose_comp2
+                
+                #School Belonging direct effects
+                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
+                
+                #covariance
+                school_belong_comp4 ~ d*group_disclose_comp2
+                
+                cdiscl_prompt_comp2 ~ gdiscl_prompt_comp2
+                class_disclose_comp2 ~ group_disclose_comp2
+                
+                #Mediator for class disclosure
+                class_disclose_comp2 ~ e*cdiscl_prompt_comp2
+                
+                #Mediator for group disclosure
+                group_disclose_comp2 ~ f*gdiscl_prompt_comp2
+                class_belong_comp4 ~ gdiscl_prompt_comp2
+                school_belong_comp4 ~ gdiscl_prompt_comp2
+                '
+```
+
 #### Testing the fit
 
 ```{r testing fit}
-fit <- sem(model_1, data=study1)
+fit1 <- sem(model_1b, data=study1)
 
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
@@ -260,7 +299,7 @@ model_1a <-   '  #Class Belonging direct effects
 ```
 
 
-```{r testing fit}
+```{r testing fit w/ int student status}
 fit <- sem(model_1a, data=study1)
 
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
@@ -315,8 +354,11 @@ As expected, a large portion of our participants are not reporting any disclosur
 
 We suspect that asynchronous classes have disrupted our data.
 
-And so, we will run the model again, but this time dropping anyone who has no disclosure at all. While this does eliminate a key segment of data, it will allow us to look at only classes that are not wholly asynchronous.
+And so, we will run the model again, but this time dropping anyone who has no disclosure at all. While this does eliminate a key segment of data.
 
+"appears that many people are in asychnronrous classes, but we don't know exactly what's going on."
+
+Among those that have some opportunity to disclose. We know lots of people are not disclosing and have a wide range of belonging. Among those that do disclose...
 
 ```{r running with only people who have some disclosure}
 study1a <- study1[study1$class_disclose_comp2 > 1,]
@@ -324,7 +366,7 @@ study1a <- study1[study1$class_disclose_comp2 > 1,]
 
 
 ```{r testing fit}
-fit <- sem(model_1, data=study1a)
+fit2 <- sem(model_1, data=study1a)
 
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
@@ -377,7 +419,7 @@ model_2 <-   '  #Class Belonging direct effects
 ```
 
 ```{r testing fit}
-fit <- sem(model_2, data=study1)
+fit3 <- sem(model_2, data=study1)
 
 summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
@@ -400,7 +442,11 @@ With the larger sample we're able to see the pattern that we expected.
 It's important to get a visual understanding of what the data is telling us, even if the model is pretty ugly right now. I will work with Mason to get a pretty visualization.
 
 ```{r Path visualization}
-semPaths(fit, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+semPaths(fit1, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+
+semPaths(fit2, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+
+semPaths(fit3, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
 ```
 
 #### Bootstrapping
