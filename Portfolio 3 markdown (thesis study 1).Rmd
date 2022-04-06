@@ -160,16 +160,12 @@ Classmates and group members known prior:
 
 ```{r model creation}
 model_1 <-   '  #Class Belonging direct effects
-                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary + gender_male_dummy +
-                race_asian + race_black + race_hispanic + race_multiracial + class_know_prior +
-                know_prior_group
+                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
                 
                 class_belong_comp4 ~ b*group_disclose_comp2
                 
                 #School Belonging direct effects
-                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary + gender_male_dummy +
-                race_asian + race_black + race_hispanic + race_multiracial + class_know_prior +
-                know_prior_group
+                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
                 
                 school_belong_comp4 ~ d*group_disclose_comp2
                 
@@ -190,6 +186,27 @@ model_1 <-   '  #Class Belonging direct effects
 
 #### Testing the fit
 
+People are mostly at a 1 in disclosure., so we want to look at folk with disclosure.
+
+hist(study1$class_disclose_comp2)
+
+study1 %>%
+        group_by(group_use) %>%
+        summarize(freq=n())
+
+plot(study1$class_disclose_comp2, study1$class_belong_comp4)
+
+```{r running with only people who have dislosure at all}
+study1a <- study1[study1$class_disclose_comp2 > 1,]
+
+
+```
+
+```{r testing fit}
+fit <- sem(model_1, data=study1a)
+
+summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
 
 ```{r testing fit}
 fit <- sem(model_1, data=study1)
