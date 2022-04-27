@@ -24,7 +24,7 @@ library('lmerTest')
 library('OpenMx')
 library('semPlot')
 library('tidyverse')
-library('Hmisc')
+
 rm(list=ls())
 
 ##### Bringing in the data
@@ -162,12 +162,13 @@ It's noteworthy that there is a large number of the sample that do not have resp
 
 I'd like to look at the basic bivariate correlations for the VOI.
 
-This only works with Hmisc on, but that contradicts my later use of summarize. 
-# What's the better way of doing this?
+This only works with Hmisc on, but that contradicts my later use of summarize. Therefore, I turn on Hmisc for this part, and turn it off after. 
+
+library('Hmisc')
 
 ```{r bivariate correlations}
 correlations <- study1 %>%
-        select(class_belong_comp4, school_belong_comp4, class_disclose_comp2, group_disclose_comp2, class_disclose_comp2, group_disclose_comp2)
+        select(class_belong_comp4, school_belong_comp4, class_disclose_comp2, group_disclose_comp2, cdiscl_prompt_comp2, gdiscl_prompt_comp2)
 
 rcorr(as.matrix(correlations))
     
@@ -187,134 +188,280 @@ Classmates and group members known prior:
 
 
 ##### Model 1
-```{r model creation}
+
+```{r Revised model}
 model_1 <-   '  #Class Belonging direct effects
-                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
+                class_belong_comp4 ~ a*cdiscl_prompt_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
                 
-                class_belong_comp4 ~ b*group_disclose_comp2
+                class_belong_comp4 ~ b*gdiscl_prompt_comp2
                 
                 #School Belonging direct effects
-                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
+                school_belong_comp4 ~ c*cdiscl_prompt_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
                 
-                school_belong_comp4 ~ d*group_disclose_comp2
+                school_belong_comp4 ~ d*gdiscl_prompt_comp2
                 
                 #Mediator for class disclosure
                 class_disclose_comp2 ~ e*cdiscl_prompt_comp2
-                class_belong_comp4 ~ cdiscl_prompt_comp2
-                school_belong_comp4 ~ cdiscl_prompt_comp2
+                class_belong_comp4 ~ f*class_disclose_comp2
+                school_belong_comp4 ~ class_disclose_comp2
                 
                 #Mediator for group disclosure
-                group_disclose_comp2 ~ f*gdiscl_prompt_comp2
-                class_belong_comp4 ~ gdiscl_prompt_comp2
-                school_belong_comp4 ~ gdiscl_prompt_comp2
+                group_disclose_comp2 ~ g*gdiscl_prompt_comp2
+                class_belong_comp4 ~ h*group_disclose_comp2
+                school_belong_comp4 ~ group_disclose_comp2
                 
-                #removing correlation between prompted disclosures
+              #indirect effect (class disclosure)
+                class_indirect := e*f
+                
+                
+              #indirect effect (group disclosure)
+                group_indirect := g*h
+              
+              #total effect class
+                total_class_c := a + (e*f)
+                total_group_c := c + (e*f)
+                
+              #Total effect group
+                total_class_g := b + (g*h)
+                total_group_g := d + (g*h)
+              
+              
+              #covariance
+                class_disclose_comp2 ~~ group_disclose_comp2
+                
+              #removing correlation between prompted disclosures
                 cdiscl_prompt_comp2 ~~ 0*gdiscl_prompt_comp2
+                
                 '
 ```
 
-```{r model creation}
-model_1b <-   '  #Class Belonging direct effects
-                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
-                
-                class_belong_comp4 ~ b*group_disclose_comp2
-                
-                #School Belonging direct effects
-                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
-                
-                #covariance
-                school_belong_comp4 ~ d*group_disclose_comp2
-                
-                cdiscl_prompt_comp2 ~ gdiscl_prompt_comp2
-                class_disclose_comp2 ~ group_disclose_comp2
-                
-                #Mediator for class disclosure
-                class_disclose_comp2 ~ e*cdiscl_prompt_comp2
-                
-                #Mediator for group disclosure
-                group_disclose_comp2 ~ f*gdiscl_prompt_comp2
-                class_belong_comp4 ~ gdiscl_prompt_comp2
-                school_belong_comp4 ~ gdiscl_prompt_comp2
-                '
-```
-
-#### Testing the fit
 
 ```{r testing fit}
-fit1 <- sem(model_1b, data=study1)
+fit1 <- sem(model_1, data=study1)
 
-summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+summary(fit1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
 
-> Key variables and significant variables
-class belonging
-     class disclosure 	est.   .189	p=.126
-     Group disclosure	est.   .065	p=.649
-     nonbinary 		est. -1.069	p=.058
-     asian		est. -1.037	p=.004
-     class_know_prior	est.   .479	p=.001
-     group_know_prior	est.   .065	p=.065
-school belonging
-     class disclosure	est. -0.144 	p=.170
-     group disclosure   est.   .221	p=.017
-     nonbinary		est.  -.532	p=.269
-     asian		est.  -.676	p=.027
-     class know prior	est.   .297	p=.014
-     group_know_prior	est.  -.122	p=.261
+>Model Test User Model:
+                                                      
+> Test statistic                               125.880
+  Degrees of freedom                                35
+  P-value (Chi-square)                           0.000
+
+> Comparative Fit Index (CFI)                    0.673
+  RMSEA                                          0.156
+  SRMR                                           0.114
+
+The fit is not very good for this model, which is a concern.
+
+>Regressions:
+                         Estimate  Std.Err  z-value  P(>|z|)
+  Class belonging                                                       
+Key variables
+    Class disclosure        0.189    0.178    1.063    0.288
+    Class prompted discl    0.185    0.120    1.549    0.121
+    Group disclosure        0.065    0.157    0.416    0.678
+    Group prompted discl   -0.047    0.121   -0.387    0.699
+Others
+    Nonbinary              -1.069    0.565   -1.893    0.058 
+    Asian                  -1.037    0.359   -2.891    0.004
+    Classmates known        0.479    0.142    3.371    0.001  
+    Study known            -0.235    0.127   -1.846    0.065  
+
+> School belonging                                                       
+Key variables
+    Class disclosure       -0.144    0.151   -0.954    0.340
+    Class prompted discl    0.241    0.102    2.367    0.018
+    Group disclosure        0.221    0.134    1.651    0.099
+    Group prompted discl   -0.140    0.103   -1.350    0.177  
+Others
+    Nonbinary              -0.532    0.482   -1.105    0.269 
+    Asian                  -0.676    0.306   -2.212    0.027  
+    Classmates known        0.297    0.121    2.453    0.014   
+    Study known            -0.122    0.108   -1.124    0.261  
+ 
+> Covariances:
+                                    Estimate  Std.Err  z-value  P(>|z|)
+                                                     
+> Class and Group disclosure          0.549    0.091    6.055    0.000
+                                                       
+> Class and school belonging          0.466    0.100    4.648    0.000
 
 
-We replicated our finding that Asian student status is a negative predictor of belonging. While marginal for class belonging, non binary is also a negative predictor.
+We replicated our finding that Asian is a negative predictor of belonging. While marginal for class belonging, non binary is also a negative predictor.
 
 class members known prior is a predictor of belonging and group members known is marginal.
 
-I'd like to briefly look at whether international student status is a predictor. 
-#For some reason, this code is wrong?
-
-```{r model 1a}
-model_1a <-   '  #Class Belonging direct effects
-                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                
-                race_multiracial + class_know_prior + know_prior_group + demog_international
-                
-                class_belong_comp4 ~ b*group_disclose_comp2
-                
-                #School Belonging direct effects
-                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                
-                race_multiracial + class_know_prior + know_prior_group + demog_international
-                
-                school_belong_comp4 ~ d*group_disclose_comp2
-                
-                #Mediator for class disclosure
-                class_disclose_comp2 ~ e*cdiscl_prompt_comp2
-                class_belong_comp4 ~ cdiscl_prompt_comp2
-                school_belong_comp4 ~ cdiscl_prompt_comp2
-                
-                #Mediator for group disclosure
-                group_disclose_comp2 ~ f*gdiscl_prompt_comp2
-                class_belong_comp4 ~ gdiscl_prompt_comp2
-                school_belong_comp4 ~ gdiscl_prompt_comp2
-                
-                #removing correlation between prompted disclosures
-                cdiscl_prompt_comp2 ~~ 0*gdiscl_prompt_comp2'
-```
-
-
-```{r testing fit w/ int student status}
-fit <- sem(model_1a, data=study1)
-
-summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-
+```{r bootstrapped code}
+fit1 <- sem(model_1, data=study1, se="bootstrap", bootstrap = 10000)
+summary(fit1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 ```
 
 
 > Class disclosure is not predicting class belonging or school belonging, which is odd. So I want to find out why.
 
+Because of the earlier bivariate correlations, we know that both disclosures are highly correlated. 
+This suggests to us that it would be worth looking at the path models of each level of our predicted model.
+
+
+# Should make changes
+##### Possibility 1! Lost data
+
+Looking at the results from model_1, we're also losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I examine this possibility below.
+
+```{r}
+study1 %>%
+        group_by(group_use) %>%
+        summarize(freq=n())
+#Most people are saying they don't use groups at all (123 with no usage).
+```
+
+The graph makes it clear that there's pretty wide variance for the people with no class disclosure. That may be stifling the variance among people who do disclose from appearing in the model.
+
+So now, we want to look at what's happening without group disclosure.
+
+
+##### Class Only model
+
+While model_1 is good, it is washing out a lot of data from the class disclosure as we only got responses for group disclosure from students who did meet in groups. As such, we're interested in examining the full class disclosure data set.
+
+
+```{r just class model}
+model_class <-   '  #Class Belonging direct effects
+                class_belong_comp4 ~ a*cdiscl_prompt_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior
+                
+                #School Belonging direct effects
+                school_belong_comp4 ~ d*cdiscl_prompt_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior
+                
+                #Mediator for class disclosure
+                class_disclose_comp2 ~ b*cdiscl_prompt_comp2
+                class_belong_comp4 ~ c*class_disclose_comp2
+                school_belong_comp4 ~ class_disclose_comp2
+                
+                #indirect effect (class disclosure)
+                indirect := b*c
+                
+                #total effect
+                total_class := a + (b*c)
+                total_school := d + (b*c)
+                '
+```
+
+
+```{r testing fit}
+fit_class <- sem(model_class, data=study1)
+
+summary(fit2, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+
+```
+
+>Regressions:
+                                     Estimate  Std.Err  z-value  P(>|z|)   
+  Class Belonging                                                        
+Key variables
+    Class disclosure                   0.325    0.096    3.377    0.001
+    Class prompted disclosure          0.094    0.084    1.115    0.265
+Others    
+    Nonbinary                         -0.651    0.360   -1.808    0.071
+    Asian                             -0.653    0.226   -2.891    0.004
+    Class known prior                  0.132    0.061    2.150    0.032
+
+> School belonging
+    Class Disclosure                   0.114    0.085    1.334    0.182
+    Class prompted disclosure          0.062    0.075    0.829    0.407
+Others
+    Asian                             -0.594    0.201   -2.960    0.003
+    Class known prior                  0.188    0.055    3.446    0.001
+
+> MEDIATION
+>   Class disclosure  
+       Prompted disclosure             0.461    0.042   10.933    0.000
+       Indirect effect                 0.150    0.046    3.227    0.001
+       total_class                     0.244    0.073    3.350    0.001
+       total_school                    0.212    0.078    2.731    0.006
+
+```{r bootstrapped code}
+fit_class1 <- sem(model_class, data=study1, se="bootstrap", bootstrap = 10000)
+summary(fit_class1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
 
 
 
 
-##### Possibility 1! Low Disclosure
 
+
+##### Group Only Model
+
+```{r Group only model}
+model_group <-   '  #Class Belonging direct effects
+                class_belong_comp4 ~ a*gdiscl_prompt_comp2 + gender_nonbinary +                                     gender_male_dummy + race_asian + race_black + race_hispanic +                                       race_multiracial + class_know_prior + know_prior_group
+
+                #School Belonging direct effects
+                school_belong_comp4 ~ d*gdiscl_prompt_comp2 + gender_nonbinary +                                    gender_male_dummy + race_asian + race_black + race_hispanic +                                       race_multiracial + class_know_prior + know_prior_group
+
+                #Mediator for group disclosure
+                group_disclose_comp2 ~ b*gdiscl_prompt_comp2
+                class_belong_comp4 ~ c*group_disclose_comp2
+                school_belong_comp4 ~ group_disclose_comp2
+                
+              #indirect effect (group disclosure)
+                indirect := b*c
+
+              #Total effect group
+                total_class := b + (b*c)
+                total_group := d + (b*c)
+                '
+```
+
+```{r testing fit}
+fit_group <- sem(model_group, data=study1)
+
+summary(fit_group, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+
+```
+
+> Model Test User Model:
+                                                      
+> Test statistic                                 8.377
+  Degrees of freedom                                 8
+  P-value (Chi-square)                           0.398
+
+> Comparative Fit Index (CFI)                    0.996
+  RMSEA                                          0.021
+  SRMR                                           0.029
+
+>Regressions:
+                         Estimate  Std.Err  z-value  P(>|z|)
+  Class belonging
+Key variables
+    Group disclosure        0.198    0.111    1.790    0.073 
+    Group prompted discl    0.114    0.124    0.921    0.357
+Others
+    Nonbinary              -0.972    0.574   -1.695    0.090
+    Asian                  -1.086    0.367   -2.962    0.003
+    Classmates known        0.493    0.145    3.409    0.001  
+    Study known            -0.250    0.129   -1.936    0.053  
+  
+>  School belonging                                                      
+    Group disclosure        0.143    0.094    1.520    0.128
+    Group prompted discl    0.037    0.105    0.349    0.727 
+
+> MEDIATION
+    Group disclosure                                                     
+    Group prompted discl    0.427    0.096    4.458    0.000
+     indirect effect        0.085    0.051    1.661    0.097
+     total_class            0.511    0.124    4.122    0.000
+     total_group            0.121    0.109    1.116    0.264
+
+```{r bootstrapped code}
+fit_group1 <- sem(model_group, data=study1, se="bootstrap", bootstrap = 10000)
+summary(fit_group1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
+
+##### Possibility 2! Low Disclosure
+
+Another issue that there may be very few people actually disclosing.
 This may be because people are mostly at a 1 in disclosure.
 
 ```{r looking at disclosure}
@@ -350,15 +497,17 @@ study1 %>%
 #127 at 1, 108 at 2; 78% of our sample
 ```
 
-As expected, a large portion of our participants are not reporting any disclosure. Looking at some responses on an open-ended comment, several students indicated they were in wholly asynchronous classes. We should have expected this and controlled for it, but we can look at exploratory analyses with this in mind now.
 
-We suspect that asynchronous classes have disrupted our data.
+As expected, a large portion of our participants are not reporting any disclosure. Looking at some responses on an open-ended comment, several students indicated they were in wholly asynchronous classes. One possibility is that there are many individuals in asynchronous classes, but there also may be very little disclosure in synchronous classes.
 
-And so, we will run the model again, but this time dropping anyone who has no disclosure at all. While this does eliminate a key segment of data.
 
-"appears that many people are in asychnronrous classes, but we don't know exactly what's going on."
+What we do know is that there is tremendous variance within people reporting no disclosure. This may be suppressing our ability to examine the variance between disclosure levels.
 
-Among those that have some opportunity to disclose. We know lots of people are not disclosing and have a wide range of belonging. Among those that do disclose...
+And so, we will run the model again, but this time dropping anyone who has no disclosure at all. While this does eliminate a key segment of data, it is valuable to know what is going on.
+
+
+> Subsetting data to exclude anyone with a disclosure under 2
+
 
 ```{r running with only people who have some disclosure}
 study1a <- study1[study1$class_disclose_comp2 > 1,]
@@ -366,9 +515,9 @@ study1a <- study1[study1$class_disclose_comp2 > 1,]
 
 
 ```{r testing fit}
-fit2 <- sem(model_1, data=study1a)
+fit_discl_no1 <- sem(model_group, data=study1a)
 
-summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+summary(fit_discl_no1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
 
@@ -384,57 +533,6 @@ While we lost a LOT of participants, leaving us with a sample of only n=83, we d
 
 
 
-##### Possibility 2! Lost data
-
-Looking at the results from model_1, we're also losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I examine this possibility below.
-
-```{r}
-study1 %>%
-        group_by(group_use) %>%
-        summarize(freq=n())
-#Most people are saying they don't use groups at all (123 with no usage).
-```
-
-The graph makes it clear that there's pretty wide variance for the people with no class disclosure. That may be stifling the variance among people who do disclose from appearing in the model.
-
-So now, we want to look at what's happening without group disclosure.
-
-
-##### Model 2
-
-While model_1 is good, it is washing out a lot of data from the class disclosure as we only got responses for group disclosure from students who did meet in groups. As such, we're interested in examining the full class disclosure data set.
-
-```{r no group disclosure model}
-model_2 <-   '  #Class Belonging direct effects
-                class_belong_comp4 ~ a*class_disclose_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior
-                
-                #School Belonging direct effects
-                school_belong_comp4 ~ c*class_disclose_comp2 + gender_nonbinary +                            gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior
-                
-                #Mediator for class disclosure
-                class_disclose_comp2 ~ e*cdiscl_prompt_comp2
-                class_belong_comp4 ~ cdiscl_prompt_comp2
-                school_belong_comp4 ~ cdiscl_prompt_comp2
-                '
-```
-
-```{r testing fit}
-fit3 <- sem(model_2, data=study1)
-
-summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-
-```
-
-Class disclosure is predictive of class belonging, but not of institutional belonging.
-
-> Key variable
-                         Estimate  Std.Err  z-value  P(>|z|)
-  Class belonging                                                      
-    class disclosure       0.325    0.096    3.377    0.001
-  school belonging                                                      
-    class disclosure       0.114    0.085    1.334    0.182
-    
-With the larger sample we're able to see the pattern that we expected. 
 
 
 #### Graphing!
