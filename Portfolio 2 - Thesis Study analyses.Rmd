@@ -379,7 +379,7 @@ summary(fit_group, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 ```
 
 ```{r bootstrapped group model fit}
-fit_group1 <- sem(model_group, data=study1, se="bootstrap", bootstrap = 10000)
+fit_group <- sem(model_group, data=study1, se="bootstrap", bootstrap = 10000)
 summary(fit_group1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 ```
 
@@ -471,29 +471,8 @@ It's important to get a visual understanding of what the data is telling us, eve
 ```{r Path visualization}
 semPaths(fit1, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
 
-semPaths(fit2, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+semPaths(fit_class, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
 
-semPaths(fit3, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
+semPaths(fit_group, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
 ```
 
-#### Bootstrapping
-
-#####for boot strapped 95% CIs
-
-```{r bootstrapped code}
-fit <- sem(model_1, data=Classroom_Experiences, se="bootstrap", bootstrap = 10000)
-summary(fit, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-```
-
-
-# What does the data mean?
-
->This section will be used for me to write up what I've learned from the data analysis, as a point to reference the findings while I'm working later.
-
->H1: Students who disclose in a class or small group will report higher feelings of belonging in the class and at their institution.
-
-XXXXXXXXXXXXXXXXXXXXXXXX
-
->H2: Prompting disclosure in class or in small groups will be associated with greater disclosure and greater sense of belonging at the classroom and institutional level, as well as whether the relationship between disclosure and institutional belonging is mediated by classroom belonging.
-
-XXXXXXXXXXXXXXXXXXXXXXXX
