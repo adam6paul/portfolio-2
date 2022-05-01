@@ -5,9 +5,7 @@ date: "3/24/2022"
 output: html_document
 ---
 
-> The purpose of this portfolio is to run the analyses for study 1 of my thesis. It is based on the analyses set up in Portfolio 4 (yes, the numbering is odd too me two).
-
-Yes, that was a joke.
+> The purpose of this portfolio is to run the analyses for study 1 of my thesis.
 
 ## Set-up
 
@@ -29,72 +27,18 @@ rm(list=ls())
 
 ##### Bringing in the data
 
-Data downloaded from Qualtrics as a .csv
+In the spirit of full disclosure, this was done prior to doing the data cleaning in portfolio 1. Instead, when I was working on my thesis I did my data cleaning in SPSS (which I expect I will continue to do, though it's nice to have learned how to do it in R)
 
-```{r bringing in data}
-study1 <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (Excel cleaned).csv", row.names=NULL, stringsAsFactors=TRUE)
-View(study1)
-```
-
-
-##TEMP CHANGE
-Variable cleaning was done using SPSS, which is not what I wanted to do. As such, the data will be returned from SPSS. Full version will have data cleaning done in R.
+As such, the data will be returned from SPSS here. In the fully put together version, I will combine with the data from portfolio 1, but I want to ensure things are accurate here.
 
 ```{r temporary data returning}
 `study1` <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (SPSS cleaned).csv")
 View(study1)
 ```
 
-Ensuring the dataframe is a tibble (be proud, Mason)
+Ensuring the dataframe is a tibble.
 
 as_tibble(study1)
-
-### Checking for bad data
-
-Checking for bad actors in the data, before giving credit.
-
-summary(study1$duration_seconds)
-
-```{r Filtering}
-#looking narrowly at people under the 1st quartile (172)
-
-filter(study1, duration_seconds < 172) %>%
-        arrange(duration_seconds)
-```
-
-I found no straight-lining within this subset, which suggests to me that the data was all given in good faith. However, I wanted to look at another subset.
-
-I filtered for students that answered positively on two items that previous research suggest should be opposite, belonging and feeling like an outsider.
-
-```{r}
-filter(study1, school_belong > 4, school_outsider > 4)
-#40 students fall into this category
-
-filter(study1, class_belong > 4, class_outsider > 4)
-#18 students fall into class.
-
-filter(study1, school_belong > 4, school_outsider > 4, class_belong > 4, class_outsider > 4)
-#4 students fall into this category. Only one seemed suspicious, but passed along to Shannon to make a decision.
-
-```
-
-## Data cleaning
-
-Removing identifying information from the dataset.
-
-```{r}
-study1 <- subset(study1, select= -c(StartDate, EndDate, Status,	IPAddress, Progress,
-                Finished, RecordedDate, ResponseId, RecipientLastName, RecipientFirstName,
-                RecipientEmail, ExternalReference, LocationLatitude, LocationLongitude,
-                DistributionChannel, UserLanguage))
-
-```
-
-
-##### Basic data cleaning
-
-Several variable names were changed in excel. Specifically, the names of the gender responses were changed from a number to their actual gender identity (e.g., demog_gender_1 became demog_gender_female). Will make a full-list when I re-do the data cleaning in R.
-
 
 ------------------
 
