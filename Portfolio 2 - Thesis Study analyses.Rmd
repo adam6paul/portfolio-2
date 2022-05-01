@@ -27,16 +27,9 @@ rm(list=ls())
 
 ##### Bringing in the data
 
-In the spirit of full disclosure, this was done prior to doing the data cleaning in portfolio 1. Instead, when I was working on my thesis I did my data cleaning in SPSS (which I expect I will continue to do, though it's nice to have learned how to do it in R)
-
-As such, the data will be returned from SPSS here. In the fully put together version, I will combine with the data from portfolio 1, but I want to ensure things are accurate here.
 
 ```{r loading data}
-
-```
-
-```{r temporary data returning}
-`study1` <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (SPSS cleaned).csv")
+study1 <- read_csv("~/GitHub/Portfolio-1/Study1_data_R_cleaned.csv")
 View(study1)
 ```
 
@@ -94,7 +87,7 @@ H2: Prompting disclosure in class or in small groups will be associated with gre
 All of this can be answered with a single path analysis, but before getting there I need to do some basic examinations of the data.
 
 
-Looking at the basic information for class disclosure.
+Looking at the basic information for the variables of interest.
 
 ```{r}
 summary(study1$class_belong_comp4)
@@ -106,11 +99,13 @@ summary(study1$gdiscl_prompt_comp2)
 
 ```
 
-It's noteworthy that there is a large number of the sample that do not have responses for group disclosure.
+It's noteworthy that there is a large number of the sample that do not have responses for the group variables (n=123).
 
-I'd like to look at the basic bivariate correlations for the VOI.
 
-This only works with Hmisc on, but that contradicts my later use of summarize. Therefore, I turn on Hmisc for this part, and turn it off after. 
+
+Now, I'd like to look at the basic bivariate correlations for the VOI.
+
+This only works with Hmisc on, but that contradicts my later use of summarize. Therefore, I turn on Hmisc for this part, and turn it off after. Again, janky, but I'd rather have code that works and documents what I did than is perfectly clean.
 
 library('Hmisc')
 
@@ -121,6 +116,10 @@ correlations <- study1 %>%
 rcorr(as.matrix(correlations))
     
 ```
+
+I turned Hmisc off using the packages frame after looking.
+
+What we see is that everything is significantly correlated except for group prompted disclosure and either of the belonging composites.
 
 #### Creating the model!
 
@@ -137,7 +136,7 @@ Classmates and group members known prior:
 
 ##### Model 1
 
-```{r Revised model}
+```{r full model}
 model_1 <-   '  #Class Belonging direct effects
                 class_belong_comp4 ~ a*cdiscl_prompt_comp2 + gender_nonbinary +                             gender_male_dummy + race_asian + race_black + race_hispanic +                                race_multiracial + class_know_prior + know_prior_group
                 
@@ -184,7 +183,7 @@ model_1 <-   '  #Class Belonging direct effects
 ```
 
 
-```{r testing fit}
+```{r testing fit for full model}
 fit1 <- sem(model_1, data=study1)
 
 summary(fit1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
