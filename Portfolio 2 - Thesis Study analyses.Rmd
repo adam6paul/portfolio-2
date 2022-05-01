@@ -31,6 +31,10 @@ In the spirit of full disclosure, this was done prior to doing the data cleaning
 
 As such, the data will be returned from SPSS here. In the fully put together version, I will combine with the data from portfolio 1, but I want to ensure things are accurate here.
 
+```{r loading data}
+
+```
+
 ```{r temporary data returning}
 `study1` <- read.csv("~/Master's Program Wake Forest/Research/Online Belonging/Thesis Study 1/Online Course Experiences (SPSS cleaned).csv")
 View(study1)
