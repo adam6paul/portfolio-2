@@ -190,72 +190,67 @@ summary(fit1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
 
+This was to test the model worked, below is the boostrapped version of the analyses.
+
+
+```{r bootstrapped full model}
+fit1 <- sem(model_1, data=study1, se="bootstrap", bootstrap = 10000)
+summary(fit1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
 >Model Test User Model:
                                                       
-> Test statistic                               125.880
+> Test statistic                               126.697
   Degrees of freedom                                35
   P-value (Chi-square)                           0.000
 
-> Comparative Fit Index (CFI)                    0.673
+> Comparative Fit Index (CFI)                    0.669
   RMSEA                                          0.156
-  SRMR                                           0.114
+  SRMR                                           0.115
 
-The fit is not very good for this model, which is a concern.
+The fit is not very good for this model, which is a concern. 9941 bootstrap draws were completed before it terminated, so slightly less than 10,000.
 
 >Regressions:
                          Estimate  Std.Err  z-value  P(>|z|)
   Class belonging                                                       
 Key variables
-    Class disclosure        0.189    0.178    1.063    0.288
-    Class prompted discl    0.185    0.120    1.549    0.121
-    Group disclosure        0.065    0.157    0.416    0.678
-    Group prompted discl   -0.047    0.121   -0.387    0.699
+    Class disclosure        0.203    0.230    0.881    0.378
+    Class prompted discl    0.191    0.189    1.010    0.313
+    Group disclosure        0.082    0.195    0.419    0.675
+    Group prompted discl   -0.065    0.213   -0.306    0.759
 Others
-    Nonbinary              -1.069    0.565   -1.893    0.058 
-    Asian                  -1.037    0.359   -2.891    0.004
-    Classmates known        0.479    0.142    3.371    0.001  
-    Study known            -0.235    0.127   -1.846    0.065  
+    Asian                  -0.783    0.351   -2.232    0.026
+    Classmates known        0.427    0.143    2.990    0.003   
 
 > School belonging                                                       
 Key variables
-    Class disclosure       -0.144    0.151   -0.954    0.340
-    Class prompted discl    0.241    0.102    2.367    0.018
-    Group disclosure        0.221    0.134    1.651    0.099
-    Group prompted discl   -0.140    0.103   -1.350    0.177  
-Others
-    Nonbinary              -0.532    0.482   -1.105    0.269 
-    Asian                  -0.676    0.306   -2.212    0.027  
-    Classmates known        0.297    0.121    2.453    0.014   
-    Study known            -0.122    0.108   -1.124    0.261  
+    Class disclosure       -0.161    0.188   -0.856    0.392
+    Class prompted discl    0.232    0.165    1.403    0.161
+    Group disclosure        0.241    0.151    1.597    0.110
+    Group prompted discl   -0.136    0.192   -0.706    0.480  
+Others 
+    Asian                  -0.676    0.306   -2.209    0.027  
+    Classmates known        0.288    0.143    2.021    0.043    
  
 > Covariances:
                                     Estimate  Std.Err  z-value  P(>|z|)
                                                      
-> Class and Group disclosure          0.549    0.091    6.055    0.000
+> Class and Group disclosure          0.549    0.115    4.777    0.000
                                                        
-> Class and school belonging          0.466    0.100    4.648    0.000
+> Class and school belonging          0.487    0.086    5.650    0.000
+
+> Disclosure is not predicting class belonging or school belonging, which is odd. So I want to find out why.
 
 
-We replicated our finding that Asian is a negative predictor of belonging. While marginal for class belonging, non binary is also a negative predictor.
+We replicated our finding that Asian is a negative predictor of belonging, at both levels. Classmates known was also a signficiant positive predictor of belonging.
 
 class members known prior is a predictor of belonging and group members known is marginal.
 
-```{r bootstrapped code}
-fit1 <- sem(model_1, data=study1, se="bootstrap", bootstrap = 10000)
-summary(fit1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-```
 
+Why didn't find support for either of our predictions. Why?
 
-> Class disclosure is not predicting class belonging or school belonging, which is odd. So I want to find out why.
+Well, one obvious problem is we're losing a lot of our sample. 
 
-Because of the earlier bivariate correlations, we know that both disclosures are highly correlated. 
-This suggests to us that it would be worth looking at the path models of each level of our predicted model.
-
-
-# Should make changes
-##### Possibility 1! Lost data
-
-Looking at the results from model_1, we're also losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I examine this possibility below.
+Looking at the results from model_1, we're losing a lot of our sample. This may be because it's excluding anyone who did not use a group, as they have no data on group disclosure. I examine this possibility below.
 
 ```{r}
 study1 %>%
@@ -264,14 +259,14 @@ study1 %>%
 #Most people are saying they don't use groups at all (123 with no usage).
 ```
 
-The graph makes it clear that there's pretty wide variance for the people with no class disclosure. That may be stifling the variance among people who do disclose from appearing in the model.
-
-So now, we want to look at what's happening without group disclosure.
+Because of the earlier bivariate correlations, we know that both levels of disclosure are highly correlated. And in the model, they are also highly correlated. This suggests that there may be a collinearity problem with the model, so in line with suggestions from my committee I looked at the path models of class and group disclosure separately.
 
 
 ##### Class Only model
 
-While model_1 is good, it is washing out a lot of data from the class disclosure as we only got responses for group disclosure from students who did meet in groups. As such, we're interested in examining the full class disclosure data set.
+While model_1 is what we initially intended to do, it is washing out a lot of data from the class disclosure as we only got responses for group disclosure from students who did meet in groups, and there is a chance collinearity is washing out the results.
+
+So, we want to look at the model for just class.
 
 
 ```{r just class model}
@@ -296,47 +291,62 @@ model_class <-   '  #Class Belonging direct effects
 ```
 
 
-```{r testing fit}
+```{r testing class model fit}
 fit_class <- sem(model_class, data=study1)
 
-summary(fit2, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+summary(fit_class, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
+
+
+```{r bootstrapped class model fit}
+fit_class <- sem(model_class, data=study1, se="bootstrap", bootstrap = 10000)
+summary(fit_class, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
+
+>Model Test User Model:
+                                                      
+> Test statistic                                 11.453
+  Degrees of freedom                                7
+  P-value (Chi-square)                           0.120
+
+> Comparative Fit Index (CFI)                    0.982
+  RMSEA                                          0.046
+  SRMR                                           0.021
+
+This model is a much better fit for the data.
+
+10,000 bootstrap draws completed
 
 >Regressions:
-                                     Estimate  Std.Err  z-value  P(>|z|)   
-  Class Belonging                                                        
+                         Estimate  Std.Err  z-value  P(>|z|)
+  Class belonging                                                       
 Key variables
-    Class disclosure                   0.325    0.096    3.377    0.001
-    Class prompted disclosure          0.094    0.084    1.115    0.265
-Others    
-    Nonbinary                         -0.651    0.360   -1.808    0.071
-    Asian                             -0.653    0.226   -2.891    0.004
-    Class known prior                  0.132    0.061    2.150    0.032
-
-> School belonging
-    Class Disclosure                   0.114    0.085    1.334    0.182
-    Class prompted disclosure          0.062    0.075    0.829    0.407
+    Class disclosure        0.341    0.102    3.329    0.001
+    Class prompted discl    0.102    0.099    1.034    0.301
+>
 Others
-    Asian                             -0.594    0.201   -2.960    0.003
-    Class known prior                  0.188    0.055    3.446    0.001
+    Asian                  -0.386    0.231   -1.674    0.094
+    Nonbinary		           -0.829    0.273   -3.034    0.002
+    Classmates known        0.127    0.064    1.978    0.048   
 
-> MEDIATION
->   Class disclosure  
-       Prompted disclosure             0.461    0.042   10.933    0.000
-       Indirect effect                 0.150    0.046    3.227    0.001
-       total_class                     0.244    0.073    3.350    0.001
-       total_school                    0.212    0.078    2.731    0.006
+> School belonging                                                       
+Key variables
+    Class disclosure        0.124    0.097    1.278    0.201
+    Class prompted discl    0.071    0.082    0.861    0.389
+> 
+Others 
+    Asian                  -0.388    0.203   -1.906    0.057  
+    Classmates known        0.288    0.143    2.021    0.043    
+ 
 
-```{r bootstrapped code}
-fit_class1 <- sem(model_class, data=study1, se="bootstrap", bootstrap = 10000)
-summary(fit_class1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-```
+> Indirect effects
+    total_class      	    0.260    0.081    3.226    0.001
+    total_school            0.228    0.080    2.855    0.004
 
+Class disclosure significantly predicts class belonging, Asian was marginal at both levels, and non-binary appears as a significant predictor. Once more, classmates known is a significant predictor of at both levels.
 
-
-
-
+The indirect effects were significant for the effect of class prompted disclosure on belonging through actual class disclosure, suggesting that although the main effect is not significant the effect of prompted disclosure on belonging is mediated by class disclosure.
 
 ##### Group Only Model
 
@@ -361,50 +371,53 @@ model_group <-   '  #Class Belonging direct effects
                 '
 ```
 
-```{r testing fit}
+```{r testing group model fit}
 fit_group <- sem(model_group, data=study1)
 
 summary(fit_group, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 
 ```
 
+```{r bootstrapped group model fit}
+fit_group1 <- sem(model_group, data=study1, se="bootstrap", bootstrap = 10000)
+summary(fit_group1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
+```
+
 > Model Test User Model:
                                                       
-> Test statistic                                 8.377
+> Test statistic                                 6.880
   Degrees of freedom                                 8
-  P-value (Chi-square)                           0.398
+  P-value (Chi-square)                           0.550
 
-> Comparative Fit Index (CFI)                    0.996
-  RMSEA                                          0.021
-  SRMR                                           0.029
+> Comparative Fit Index (CFI)                    1.000
+  RMSEA                                          0.000
+  SRMR                                           0.027
+
+>9949 bootstrap draws were performed.
 
 >Regressions:
                          Estimate  Std.Err  z-value  P(>|z|)
   Class belonging
 Key variables
-    Group disclosure        0.198    0.111    1.790    0.073 
-    Group prompted discl    0.114    0.124    0.921    0.357
+    Group disclosure        0.224    0.131    1.717    0.086 
+    Group prompted discl    0.098    0.157    0.625    0.532
 Others
-    Nonbinary              -0.972    0.574   -1.695    0.090
-    Asian                  -1.086    0.367   -2.962    0.003
-    Classmates known        0.493    0.145    3.409    0.001  
-    Study known            -0.250    0.129   -1.936    0.053  
+    Asian                   0.829    0.351   -2.361    0.018
+    Classmates known        0.445    0.135    3.304    0.001  
+    Group known            -0.229    0.122   -1.881    0.060  
   
 >  School belonging                                                      
-    Group disclosure        0.143    0.094    1.520    0.128
-    Group prompted discl    0.037    0.105    0.349    0.727 
+    Group disclosure        0.153    0.114    1.341    0.180
+    Group prompted discl    0.030    0.147    0.204    0.839 
+Others
+    Asian	           -0.691    0.301   -2.295    0.022
+    Classmates known        0.271    0.136    1.992    0.046
 
 > MEDIATION
     Group disclosure                                                     
-    Group prompted discl    0.427    0.096    4.458    0.000
-     indirect effect        0.085    0.051    1.661    0.097
-     total_class            0.511    0.124    4.122    0.000
-     total_group            0.121    0.109    1.116    0.264
-
-```{r bootstrapped code}
-fit_group1 <- sem(model_group, data=study1, se="bootstrap", bootstrap = 10000)
-summary(fit_group1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-```
+    Group prompted discl    0.427    0.127    3.358    0.001
+     total_class            0.523    0.162    3.226    0.001
+     total_group            0.126    0.142    0.885    0.376 
 
 ##### Possibility 2! Low Disclosure
 
@@ -449,37 +462,6 @@ As expected, a large portion of our participants are not reporting any disclosur
 
 
 What we do know is that there is tremendous variance within people reporting no disclosure. This may be suppressing our ability to examine the variance between disclosure levels.
-
-And so, we will run the model again, but this time dropping anyone who has no disclosure at all. While this does eliminate a key segment of data, it is valuable to know what is going on.
-
-
-> Subsetting data to exclude anyone with a disclosure under 2
-
-
-```{r running with only people who have some disclosure}
-study1a <- study1[study1$class_disclose_comp2 > 1,]
-```
-
-
-```{r testing fit}
-fit_discl_no1 <- sem(model_group, data=study1a)
-
-summary(fit_discl_no1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
-
-```
-
-While we lost a LOT of participants, leaving us with a sample of only n=83, we do see that when we remove people whom have no disclosure there is a relationship between class disclosure and school belonging. The relationship between class belonging for both variables remains non-significant.
-
-  >class Belonging                                                        
-     Class disclosure   Est= -0.059     SE=0.143        p=0.681
-     Group disclosure   Est=0.100       SE=0.121        p=0.410
-   School Belonging
-     Class disclosure   Est=-0.380      SE=0.123        p=0.002
-     Group disclosure   Est=0.272       SE=0.104        p=0.009
-
-
-
-
 
 
 #### Graphing!
