@@ -11,7 +11,7 @@ output: html_document
 
 The main packages I need are lavaan and lmertest, but semPlot is used to create a visual model. The rest of the libraries are to ensure I have the other programs I may need.
 
-
+```{r packages, echo=TRUE, message=FALSE}
 library('psych')
 library('reshape2')
 library('dplyr')
@@ -22,6 +22,8 @@ library('lmerTest')
 library('OpenMx')
 library('semPlot')
 library('tidyverse')
+library('Hmisc')
+```
 
 rm(list=ls())
 
@@ -107,7 +109,6 @@ Now, I'd like to look at the basic bivariate correlations for the VOI.
 
 This only works with Hmisc on, but that contradicts my later use of summarize. Therefore, I turn on Hmisc for this part, and turn it off after. Again, janky, but I'd rather have code that works and documents what I did than is perfectly clean.
 
-library('Hmisc')
 
 ```{r bivariate correlations}
 correlations <- study1 %>%
