@@ -30,14 +30,16 @@ rm(list=ls())
 ##### Bringing in the data
 
 
-```{r loading data}
+```{r loading data, echo=TRUE, collapse=TRUE, message=FALSE}
 study1 <- read_csv("~/GitHub/Portfolio-1/Study1_data_R_cleaned.csv")
+
+# Ensuring the dataframe is a tibble.
+as_tibble(study1)
+
+#Taking a look at the table.
 View(study1)
 ```
 
-Ensuring the dataframe is a tibble.
-
-as_tibble(study1)
 
 ------------------
 
