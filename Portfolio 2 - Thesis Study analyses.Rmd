@@ -120,13 +120,6 @@ rcorr(as.matrix(correlations))
     
 ```
 
->This next bit is a part of setting up for portfolio 3, will be removed soon enough.
-
-library(xtable)
-print(xtable(upper), type="html")
-
-
-I turned Hmisc off using the packages frame after looking.
 
 What we see is that everything is significantly correlated except for group prompted disclosure and either of the belonging composites.
 
