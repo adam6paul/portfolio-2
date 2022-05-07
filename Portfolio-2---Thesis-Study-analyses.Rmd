@@ -436,73 +436,43 @@ fit_group <- sem(model_group, data=study1, se="bootstrap", bootstrap = 10000)
 summary(fit_group1, fit.measures=TRUE, standardize=TRUE, rsquare=TRUE)
 ```
 
- Model Test User Model:
+> Model Test User Model:
                                                       
- Test statistic                                 6.880
- 
- Degrees of freedom                                 8
+> Test statistic                                 6.880
+  Degrees of freedom                                 8
+  P-value (Chi-square)                           0.550
 
- P-value (Chi-square)                           0.550
-
- Comparative Fit Index (CFI)                    1.000
-
+> Comparative Fit Index (CFI)                    1.000
   RMSEA                                          0.000
-
   SRMR                                           0.027
 
-9949 bootstrap draws were performed.
+>9949 bootstrap draws were performed.
 
-Regressions:
-
+>Regressions:
                          Estimate  Std.Err  z-value  P(>|z|)
-
   Class belonging
-
 Key variables
-
     Group disclosure        0.224    0.131    1.717    0.086 
-
     Group prompted discl    0.098    0.157    0.625    0.532
-
 Others
-
     Asian                   0.829    0.351   -2.361    0.018
-
     Classmates known        0.445    0.135    3.304    0.001  
-
     Group known            -0.229    0.122   -1.881    0.060  
   
-  School belonging                                                      
-
+>  School belonging                                                      
     Group disclosure        0.153    0.114    1.341    0.180
-
     Group prompted discl    0.030    0.147    0.204    0.839 
-
 Others
-
     Asian	           -0.691    0.301   -2.295    0.022
-
     Classmates known        0.271    0.136    1.992    0.046
 
- MEDIATION
-
+> MEDIATION
     Group disclosure                                                     
-
     Group prompted discl    0.427    0.127    3.358    0.001
-
      total_class            0.523    0.162    3.226    0.001
-
      total_group            0.126    0.142    0.885    0.376 
 
-Similar to the full model, prompted disclosure in groups was a significant predictor of group disclosure. Group disclosure was not a significant predictor of either institutional belonging or class belonging. The direct effect of group prompted disclosure on belonging was nonsignificant, though the indirect effect was significant for class belonging but nonsignificant for institutional belonging. Similar to class belonging, the significant indirect effect is due to the correlation between group prompted disclosure and actual disclosure, and the inclusion of additional significant predictors in the model.
-
-As in both previous models, Asian students reported significantly lower belonging in class and at their institution, and number of classmates known prior was a significant positive predictor of belonging at the class and institutional levels. 
-
-In this model, number of group members known prior was also a significant predictor of class belonging.
-
-
-
-##### Alternative possibility: Low Disclosure
+##### Possibility 2! Low Disclosure
 
 Another issue that there may be very few people actually disclosing.
 This may be because people are mostly at a 1 in disclosure.
@@ -549,7 +519,7 @@ What we do know is that there is tremendous variance within people reporting no 
 
 #### Graphing!
 
-It's important to get a visual understanding of what the data is telling us, even if the model is pretty ugly. Better ones were made in powerpoint, but at least you can see why I didn't use them in Portfolio 3.
+It's important to get a visual understanding of what the data is telling us, even if the model is pretty ugly right now. I will work with Mason to get a pretty visualization.
 
 ```{r Path visualization}
 semPaths(fit1, whatLabels="par", layout="tree", nCharNodes=0, sizeMan=12, sizeMan2=6)
